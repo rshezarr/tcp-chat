@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"sync"
+	"time"
 )
 
 const (
@@ -44,6 +45,25 @@ func (h *Hub) getName(conn net.Conn, newConn *bufio.Reader) string {
 		} else {
 			// If everything is OK
 			return name
+		}
+	}
+}
+
+func (h *Hub) getMessage(conn net.Conn, newConn *bufio.Reader, name string) (string, error) {
+	var msg string
+	var err error
+	for {
+		msg, err = newConn.ReadString('\n')
+		userTime := time.Now().Format("2006-01-02 15:04:05")
+		if err != nil {
+			// If someone left chat
+			return "", err
+		} else if !isValidStr(msg) {
+			// If message contains invalid characters
+			conn.Write([]byte("[" + userTime + "] " + name + ":"))
+		} else {
+			// If everything is OK
+			return msg, nil
 		}
 	}
 }
