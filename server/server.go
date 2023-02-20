@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bufio"
 	"log"
 	"net"
 	"os"
@@ -32,4 +33,17 @@ func printLogo() []byte {
 		log.Printf("logo error: %v", err)
 	}
 	return wlcm
+}
+
+func (h *Hub) getName(conn net.Conn, newConn *bufio.Reader) string {
+	for {
+		name, _ := newConn.ReadString('\n')
+		if !isValidStr(name) || h.isTakenName(conn, name) {
+			// If username is incorrect or already exist
+			conn.Write([]byte("\n[ENTER YOUR NAME CORRECTLY]:"))
+		} else {
+			// If everything is OK
+			return name
+		}
+	}
 }
