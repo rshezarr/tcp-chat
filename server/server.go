@@ -1,7 +1,9 @@
 package server
 
 import (
+	"log"
 	"net"
+	"os"
 	"sync"
 )
 
@@ -22,4 +24,12 @@ func NewHub() *Hub {
 		users:       make(map[net.Conn]string),
 		tempHistory: make([]byte, 0),
 	}
+}
+
+func printLogo() []byte {
+	wlcm, err := os.ReadFile("./assets/logo.txt")
+	if err != nil {
+		log.Printf("logo error: %v", err)
+	}
+	return wlcm
 }
