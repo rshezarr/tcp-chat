@@ -2,6 +2,7 @@ package server
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -66,4 +67,19 @@ func (h *Hub) getMessage(conn net.Conn, newConn *bufio.Reader, name string) (str
 			return msg, nil
 		}
 	}
+}
+
+func (h *Hub) sendMessage(conn net.Conn, msg string) {
+	// Add all messages in txt file
+	h.tempHistory = append(h.tempHistory, []byte(msg)...)
+	os.WriteFile("./assets/chatHistory.txt", h.tempHistory, 0o666)
+	// Send message for all online users
+	h.Lock()
+	for user, n := range h.users {
+		if user != conn {
+			user.Write([]byte(msg))
+		}
+		user.Write([]byte(fmt.Sprintf("[%s] [%s]: ", time.Now().Format("2006-01-02 15:04:05"), n)))
+	}
+	h.Unlock()
 }
