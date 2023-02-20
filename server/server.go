@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -26,6 +27,40 @@ func NewHub() *Hub {
 	return &Hub{
 		users:       make(map[net.Conn]string),
 		tempHistory: make([]byte, 0),
+	}
+}
+
+func (h *Hub) handleConn(conn net.Conn) {
+	newConn := bufio.NewReader(conn)
+	// Getting name from user and checking it for a invalid characters
+	userName := strings.TrimSpace(h.getName(conn, newConn))
+	log.Printf("Connection from %v as %s", conn.RemoteAddr(), userName)
+	// Display message history to new users
+	conn.Write(h.tempHistory)
+	// Add new user to the map
+	h.Lock()
+	h.users[conn] = userName
+	h.Unlock()
+	// Send message about new user
+	h.sendMessage(conn, userName+userJoinedChat)
+	defer conn.Close()
+	for {
+		// Getting message from user and checking it for a invalid characters
+		msg, err := h.getMessage(conn, newConn, userName)
+		if err != nil {
+			log.Printf("%s left the chat", userName)
+			h.sendMessage(conn, userName+userLeftChat)
+			h.Lock()
+			delete(h.users, conn)
+			h.Unlock()
+			break
+		}
+		// Sending message for all online users
+		userTime := time.Now().Format("2006-01-02 15:04:05")
+		newMsg := fmt.Sprintf("[%s] [%s]: %s", userTime, userName, msg)
+		h.sendMessage(conn, newMsg)
+		defer conn.Close()
+		log.Printf(userName + msg)
 	}
 }
 
