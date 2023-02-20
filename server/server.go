@@ -2,6 +2,7 @@ package server
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -27,6 +28,41 @@ func NewHub() *Hub {
 	return &Hub{
 		users:       make(map[net.Conn]string),
 		tempHistory: make([]byte, 0),
+	}
+}
+
+// Starting new server and accepting new users
+func (h *Hub) Run(port string) error {
+	// Check port for nonNumeric characters
+	if !isValidPort(port) {
+		return errors.New("invalid port")
+	}
+	// Starting server
+	listener, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		return errors.New("server start error")
+	}
+	defer listener.Close()
+	fmt.Printf("Server is listening port :%s\n", port)
+	// Accepting new users and
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			log.Printf("Connection failed %v", err)
+			continue
+		}
+		// Check users quantity. Maximum must be 10
+		h.Lock()
+		if len(h.users) >= maxConn {
+			log.Printf("Server is full")
+			conn.Write([]byte("Connection limit reached. Try again later"))
+			conn.Close()
+		} else {
+			conn.Write(printLogo())
+			conn.Write([]byte("\n[ENTER YOUR NAME]:"))
+			go h.handleConn(conn)
+		}
+		h.Unlock()
 	}
 }
 
