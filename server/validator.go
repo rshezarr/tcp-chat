@@ -9,3 +9,13 @@ func isValidStr(str string) bool {
 	}
 	return false
 }
+
+// Chceking port function
+func isValidPort(port string) bool {
+	for _, v := range port {
+		if v < '0' || v > '9' {
+			return false
+		}
+	}
+	return true
+}
