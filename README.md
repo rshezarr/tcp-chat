@@ -19,13 +19,13 @@ Server will start at **8989** port
 Or, by audit case, you can run server by instruction below
 
 ```
-$ go build
+$ go build -o tcp_chat main.go
 ```
 
 You will have a exe file that you can run through the command
 
 ```
-$ ./TCPChat $PORT
+$ ./tcp_chat $PORT
 ```
 
 2. Open another terminal, and connect to the chat
